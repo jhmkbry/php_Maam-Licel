@@ -32,7 +32,7 @@
                     $servername = "localhost";
                     $username = "root";
                     $password = "";
-                    $database = "myshop";
+                    $database = "shop";
 
                     $connection = new mysqli($servername, $username, $password, $database);
 

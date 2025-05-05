@@ -21,11 +21,19 @@ $connection = new mysqli($servername, $username, $password, $database);
 if ($connection->connect_error) {
     die("Connection failed: " . $connection->connect_error);
 }
+$id = $_GET['id'];
+$get_sql ="SELECT * FROM clients where id = $id";
+$stmt = $connection -> prepare($get_sql);
+$stmt -> execute();
+$result = $stmt ->get_result();
+$current_client = $result ->fetch_assoc();
 
-$name = "";
-$email = "";
-$phone = "";
-$address = "";
+
+$name = $current_client["name"];
+$email = $current_client["email"];
+$phone = $current_client["phone"];
+$address = $current_client["address"];
+
 
 $errorMessage = "";
 $successMessage = "";
@@ -36,32 +44,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phone = $_POST["phone"];
     $address = $_POST["address"];
 
-    do {
-        if (empty($name) || empty($email) || empty($phone) || empty($address)) {
-            $errorMessage = "All fields are required";
-            break;
-        }
+    if (empty($name) || empty($email) || empty($phone) || empty($address)) {
 
-        // Insert into database
-        $sql = "INSERT INTO clients (name, email, phone, address) VALUES (?, ?, ?, ?)";
+        $errorMessage = "All fields are required";
+
+    } else {
+
+        $sql = "UPDATE clients SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?";
+
         $stmt = $connection->prepare($sql);
 
-        if (!$stmt) {
-            $errorMessage = "SQL Error: " . $connection->error;
-            break;
-        }
+        if ($stmt) {
 
-        $stmt->bind_param("ssss", $name, $email, $phone, $address);
-        if ($stmt->execute()) {
-            $successMessage = "Client added correctly";
-            $name = $email = $phone = $address = "";
+            $stmt->bind_param("ssssi", $name, $email, $phone, $address, $id);
+
+            if ($stmt->execute()) {
+
+                $successMessage = "Client Edited successfully!";
+                header("location: index.php");
+            } else {
+
+                $errorMessage = "Execution failed: " . $stmt->error;
+
+            }
+
+            $stmt->close();
+
         } else {
-            $errorMessage = "Execution failed: " . $stmt->error;
+
+            $errorMessage = "SQL error: " . $connection->error;
+
         }
 
-        $stmt->close();
-    } while (false);
-}
+    }
+    }
+
 ?>
 <body>
     <div class="container my-5">
